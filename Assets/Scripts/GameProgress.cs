@@ -9,18 +9,18 @@ public class GameProgress : MonoBehaviour
     public int nivelLaboratorio = 0;
 
     private void Awake()
+{
+    if (Instance != null && Instance != this)
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
+        Destroy(gameObject);
+        return;
+    }
 
         Instance = this;
         DontDestroyOnLoad(gameObject);
 
-        CargarProgreso();
-    }
+        ReiniciarProgreso();
+    }   
 
     public int ObtenerCostoTaller()
     {
