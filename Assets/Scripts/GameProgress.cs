@@ -4,7 +4,7 @@ public class GameProgress : MonoBehaviour
 {
     public static GameProgress Instance { get; private set; }
 
-    public int materiales = 100;
+    public int materiales = 200;
     public int nivelTaller = 0;
     public int nivelLaboratorio = 0;
 
@@ -103,7 +103,7 @@ public class GameProgress : MonoBehaviour
 
     private void CargarProgreso()
     {
-        materiales = PlayerPrefs.GetInt("Materiales", 100);
+        materiales = PlayerPrefs.GetInt("Materiales", 200);
         nivelTaller = PlayerPrefs.GetInt("NivelTaller", 0);
         nivelLaboratorio = PlayerPrefs.GetInt("NivelLaboratorio", 0);
     }
@@ -114,7 +114,7 @@ public class GameProgress : MonoBehaviour
         PlayerPrefs.DeleteKey("NivelTaller");
         PlayerPrefs.DeleteKey("NivelLaboratorio");
 
-        materiales = 100;
+        materiales = 200;
         nivelTaller = 0;
         nivelLaboratorio = 0;
     }

@@ -4,16 +4,34 @@ using UnityEngine;
 
 public class Movimientos : MonoBehaviour
 {
+    [Header("Movimiento")]
     [SerializeField] private float speed;
+
+    [Header("Suelo")]
     [SerializeField] private LayerMask groundLayer;
     [SerializeField] private Transform groundCheck;
     [SerializeField] private float groundCheckRadius = 0.2f;
+
+    [Header("Dash")]
+    [SerializeField] private float dashSpeed = 12f;
+    [SerializeField] private float dashMejoradoSpeed = 18f;
+    [SerializeField] private float dashDuration = 0.15f;
+    [SerializeField] private float dashCooldown = 0.8f;
 
     private Transform weaponHolder;
 
     private Rigidbody2D body;
     private Animator playerAnimator;
     private SpriteRenderer spriteRenderer;
+
+    // Dash
+    private bool isDashing = false;
+    private float dashTimeRemaining = 0f;
+    private float dashCooldownRemaining = 0f;
+    private int direccion = 1;
+
+    // Saltos
+    private int saltosRestantes;
 
     void Start()
     {
@@ -27,28 +45,80 @@ public class Movimientos : MonoBehaviour
         {
             Debug.LogError("No se encontró WeaponHolder como hijo del jugador.");
         }
+
+        saltosRestantes = 2;
     }
 
     void Update()
     {
         float horizontalInput = Input.GetAxis("Horizontal");
 
-        // Movimiento horizontal
-        body.velocity = new Vector2(horizontalInput * speed, body.velocity.y);
-
-        // Salto
-        if (Input.GetKeyDown(KeyCode.Space) && IsGrounded())
+        // Dash
+        if (dashCooldownRemaining > 0)
         {
-            body.velocity = new Vector2(body.velocity.x, speed);
+            dashCooldownRemaining -= Time.deltaTime;
+        }
+
+        if (isDashing)
+        {
+            dashTimeRemaining -= Time.deltaTime;
+
+            if (dashTimeRemaining <= 0)
+            {
+                isDashing = false;
+            }
+            else
+            {
+                return;
+            }
+        }
+
+        // Movimiento
+        body.velocity = new Vector2(
+            horizontalInput * speed,
+            body.velocity.y
+        );
+
+        // Saltos
+        int maxSaltos = 2;
+
+        if (GameProgress.Instance != null &&
+            GameProgress.Instance.nivelLaboratorio >= 2)
+        {
+            maxSaltos = 3;
+        }
+
+        if (IsGrounded() && body.velocity.y <= 0.01f)
+        {
+            saltosRestantes = maxSaltos;
+        }
+
+        if (Input.GetKeyDown(KeyCode.Space) &&
+            saltosRestantes > 0)
+        {
+            body.velocity = new Vector2(
+                body.velocity.x,
+                speed
+            );
+
+            saltosRestantes--;
+        }
+
+        // Activar dash
+        if (Input.GetKeyDown(KeyCode.LeftShift) &&
+            dashCooldownRemaining <= 0)
+        {
+            HacerDash();
         }
 
         // Animaciones
         playerAnimator.SetFloat("Moving", Mathf.Abs(horizontalInput));
         playerAnimator.SetBool("isGrounded", IsGrounded());
 
-        // Mirar hacia la derecha
+        // Dirección
         if (horizontalInput > 0.01f)
         {
+            direccion = 1;
             spriteRenderer.flipX = false;
 
             if (weaponHolder != null)
@@ -62,10 +132,9 @@ public class Movimientos : MonoBehaviour
                 );
             }
         }
-
-        // Mirar hacia la izquierda
         else if (horizontalInput < -0.01f)
         {
+            direccion = -1;
             spriteRenderer.flipX = true;
 
             if (weaponHolder != null)
@@ -81,6 +150,28 @@ public class Movimientos : MonoBehaviour
         }
     }
 
+    // Dash
+    private void HacerDash()
+    {
+        float velocidadDash = dashSpeed;
+
+        if (GameProgress.Instance != null &&
+            GameProgress.Instance.nivelLaboratorio >= 1)
+        {
+            velocidadDash = dashMejoradoSpeed;
+        }
+
+        isDashing = true;
+        dashTimeRemaining = dashDuration;
+        dashCooldownRemaining = dashCooldown;
+
+        body.velocity = new Vector2(
+            direccion * velocidadDash,
+            0f
+        );
+    }
+
+    // Suelo
     private bool IsGrounded()
     {
         return Physics2D.OverlapCircle(
