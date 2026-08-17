@@ -6,7 +6,7 @@ public class MenuPrincipal : MonoBehaviour
     public void NuevaPartida()
     {
         // Inicia una nueva partida cargando el primer nivel
-        SceneManager.LoadScene("Lvl1");
+        SceneManager.LoadScene("BaseIsland");
     }
 
     public void Continuar()
