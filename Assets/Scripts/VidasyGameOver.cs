@@ -10,11 +10,16 @@ public class VidasyGameOver : MonoBehaviour
     [SerializeField] private TMP_Text livesText;
     [SerializeField] private GameObject GameOver;
 
+    [Header("Invulnerabilidad")]
+    [SerializeField] private float tiempoInvulnerabilidad = 2.5f;
+
     [Header("Escudo")]
     [SerializeField] private float shieldCooldown = 5f;
 
     private int currentLives;
+
     private bool escudoDisponible = true;
+    private bool invulnerable = false;
 
     private void Start()
     {
@@ -30,6 +35,16 @@ public class VidasyGameOver : MonoBehaviour
     // Daño
     public void ReduceLives()
     {
+        // Si está en periodo de invulnerabilidad,
+        // no recibe otro golpe.
+        if (invulnerable)
+        {
+            Debug.Log("Jugador invulnerable. Daño ignorado.");
+            return;
+        }
+
+        // Si el laboratorio está en nivel 3,
+        // el escudo bloquea el golpe.
         if (GameProgress.Instance != null &&
             GameProgress.Instance.nivelLaboratorio >= 3 &&
             escudoDisponible)
@@ -38,13 +53,44 @@ public class VidasyGameOver : MonoBehaviour
             return;
         }
 
+        // Quita una vida.
         currentLives--;
         UpdateLives();
+
+        Debug.Log(
+            "Jugador recibió daño. Vidas restantes: "
+            + currentLives
+        );
 
         if (currentLives <= 0)
         {
             ShowGameOver();
+            return;
         }
+
+        // Después de recibir daño empieza
+        // el periodo de invulnerabilidad.
+        StartCoroutine(InvulnerabilidadTemporal());
+    }
+
+    // Invulnerabilidad después de recibir daño
+    private IEnumerator InvulnerabilidadTemporal()
+    {
+        invulnerable = true;
+
+        Debug.Log(
+            "Invulnerabilidad activada por "
+            + tiempoInvulnerabilidad
+            + " segundos."
+        );
+
+        yield return new WaitForSeconds(
+            tiempoInvulnerabilidad
+        );
+
+        invulnerable = false;
+
+        Debug.Log("Invulnerabilidad terminada.");
     }
 
     // Escudo
@@ -52,14 +98,18 @@ public class VidasyGameOver : MonoBehaviour
     {
         escudoDisponible = false;
 
-        Debug.Log("¡Escudo de energía activado! Daño bloqueado.");
+        Debug.Log(
+            "¡Escudo de energía activado! Daño bloqueado."
+        );
 
         StartCoroutine(RecargarEscudo());
     }
 
     private IEnumerator RecargarEscudo()
     {
-        yield return new WaitForSeconds(shieldCooldown);
+        yield return new WaitForSeconds(
+            shieldCooldown
+        );
 
         escudoDisponible = true;
 
@@ -70,20 +120,30 @@ public class VidasyGameOver : MonoBehaviour
     {
         if (livesText != null)
         {
-            livesText.text = "Lives: " + currentLives;
+            livesText.text =
+                "Lives: " + currentLives;
         }
     }
 
     private void ShowGameOver()
     {
-        GameOver.SetActive(true);
+        if (GameOver != null)
+        {
+            GameOver.SetActive(true);
+        }
+
         Time.timeScale = 0f;
     }
 
     public void Restart()
     {
-        GameOver.SetActive(false);
+        if (GameOver != null)
+        {
+            GameOver.SetActive(false);
+        }
+
         ResetLives();
+
         Time.timeScale = 1f;
 
         SceneManager.LoadScene(
@@ -94,7 +154,10 @@ public class VidasyGameOver : MonoBehaviour
     public void ResetLives()
     {
         currentLives = startingLives;
+
         escudoDisponible = true;
+        invulnerable = false;
+
         UpdateLives();
     }
 }
