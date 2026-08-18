@@ -5,8 +5,10 @@ public class AtaqueJefe : MonoBehaviour
 {
     [Header("Ataque")]
     [SerializeField] private Transform puntoAtaque;
-    [SerializeField] private float rangoAtaque = 1.5f;
+    [SerializeField] private float rangoAtaque = 12f;
     [SerializeField] private LayerMask capaJugador;
+    [SerializeField] private GameObject proyectilPrefab;
+    [SerializeField] private Vector2 offsetDisparo = new Vector2(0.8f, 0.2f);
 
     [Header("Tiempo")]
     [SerializeField] private float tiempoEntreAtaques = 5f;
@@ -18,20 +20,16 @@ public class AtaqueJefe : MonoBehaviour
     private float siguienteAtaque = 0f;
     private bool atacando = false;
 
-    private VidasyGameOver sistemaVidas;
-
     private void Start()
     {
-        sistemaVidas = FindObjectOfType<VidasyGameOver>();
-
-        if (sistemaVidas == null)
-        {
-            Debug.LogError("No se encontro VidasyGameOver.");
-        }
-
         if (puntoAtaque == null)
         {
             Debug.LogError("No se asigno PuntoAtaqueJefe.");
+        }
+
+        if (proyectilPrefab == null)
+        {
+            Debug.LogError("No se asigno el prefab del proyectil.");
         }
     }
 
@@ -46,7 +44,7 @@ public class AtaqueJefe : MonoBehaviour
         if (puntoAtaque == null)
             return;
 
-        // Solo comienza el ataque si el jugador esta dentro del rango.
+        // Dispara solo si el jugador esta dentro del rango de deteccion.
         Collider2D jugador = Physics2D.OverlapCircle(
             puntoAtaque.position,
             rangoAtaque,
@@ -69,34 +67,16 @@ public class AtaqueJefe : MonoBehaviour
             animador.SetTrigger("Atacar");
         }
 
-        // Espera hasta la mitad de la animacion.
+        // Espera hasta la mitad de la animacion antes de disparar.
         yield return new WaitForSeconds(duracionAtaque / 2f);
 
-        // Comprueba OTRA VEZ si el jugador sigue cerca.
-        Collider2D jugadorGolpeado = Physics2D.OverlapCircle(
-            puntoAtaque.position,
-            rangoAtaque,
-            capaJugador
-        );
-
-        if (jugadorGolpeado != null && sistemaVidas != null)
+        if (proyectilPrefab != null)
         {
-            sistemaVidas.ReduceLives();
-
-            Debug.Log(
-                "Boss golpeo al jugador."
-            );
-        }
-        else
-        {
-            Debug.Log(
-                "El jugador salio del rango y esquivo el ataque."
-            );
+            Vector3 posicionDisparo = transform.TransformPoint(offsetDisparo);
+            Instantiate(proyectilPrefab, posicionDisparo, Quaternion.identity);
         }
 
-        yield return new WaitForSeconds(
-            duracionAtaque / 2f
-        );
+        yield return new WaitForSeconds(duracionAtaque / 2f);
 
         atacando = false;
     }

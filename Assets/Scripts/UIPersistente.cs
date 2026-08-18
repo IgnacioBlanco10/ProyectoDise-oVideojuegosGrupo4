@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class UIPersistente : MonoBehaviour
 {
-    private void awake()
+    private void Awake()
     {
         DontDestroyOnLoad(gameObject);
     }

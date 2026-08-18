@@ -18,6 +18,10 @@ public class Movimientos : MonoBehaviour
     [SerializeField] private float dashDuration = 0.15f;
     [SerializeField] private float dashCooldown = 0.8f;
 
+    [Header("Empuje al recibir daño")]
+    [SerializeField] private float empujeFuerza = 6f;
+    [SerializeField] private float empujeDuracion = 0.15f;
+
     private Transform weaponHolder;
 
     private Rigidbody2D body;
@@ -29,6 +33,10 @@ public class Movimientos : MonoBehaviour
     private float dashTimeRemaining = 0f;
     private float dashCooldownRemaining = 0f;
     private int direccion = 1;
+
+    // Empuje
+    private bool recibiendoEmpuje = false;
+    private float empujeTiempoRestante = 0f;
 
     // Saltos
     private int saltosRestantes;
@@ -73,6 +81,21 @@ public class Movimientos : MonoBehaviour
             }
         }
 
+        // Empuje al recibir daño
+        if (recibiendoEmpuje)
+        {
+            empujeTiempoRestante -= Time.deltaTime;
+
+            if (empujeTiempoRestante <= 0)
+            {
+                recibiendoEmpuje = false;
+            }
+            else
+            {
+                return;
+            }
+        }
+
         // Movimiento
         body.velocity = new Vector2(
             horizontalInput * speed,
@@ -96,6 +119,11 @@ public class Movimientos : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Space) &&
             saltosRestantes > 0)
         {
+            if (!IsGrounded())
+            {
+                playerAnimator.SetTrigger("DoubleJump");
+            }
+
             body.velocity = new Vector2(
                 body.velocity.x,
                 speed
@@ -142,12 +170,21 @@ public class Movimientos : MonoBehaviour
                 weaponHolder.localScale = new Vector3(-1, 1, 1);
 
                 weaponHolder.localPosition = new Vector3(
-                    -0.25f,
+                    0f,
                     weaponHolder.localPosition.y,
                     weaponHolder.localPosition.z
                 );
             }
         }
+    }
+
+    // Empuje al recibir daño
+    public void AplicarEmpuje(Vector2 direccionEmpuje)
+    {
+        recibiendoEmpuje = true;
+        empujeTiempoRestante = empujeDuracion;
+
+        body.velocity = direccionEmpuje.normalized * empujeFuerza;
     }
 
     // Dash

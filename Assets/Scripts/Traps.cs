@@ -11,8 +11,12 @@ public class Traps : MonoBehaviour
     {
         if (collision.GetComponent<Movimientos>())
         {
-            collision.gameObject.transform.position= playerSpawnPoint.position;
-            FindFirstObjectByType<VidasyGameOver>().ReduceLives();
+            VidasyGameOver sistemaVidas = FindFirstObjectByType<VidasyGameOver>();
+
+            if (sistemaVidas != null)
+            {
+                sistemaVidas.ReduceLives();
+            }
         }
     }
 }
